@@ -8,13 +8,15 @@ from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 import datetime
 
+domain = "https://sis.rkcshz.cn"
+
 now = datetime.datetime.now().date()
 days = (now - datetime.date(2019,9,1)).days
 
 
 #driver = webdriver.Firefox()
 driver = webdriver.Firefox(executable_path=r'C:\geckodriver.exe')
-driver.get("https://sis.rkcshz.cn/MissedRegisters.aspx")
+driver.get(domain + "/MissedRegisters.aspx")
 assert "Engage" in driver.title
 
 while True:
@@ -46,7 +48,7 @@ while True:
         break
 
     for c in classes:
-        t = "https://sis.rkcshz.cn" + c.attrs['data-href']
+        t = domain + c.attrs['data-href']
         print(t)
         driver.get(t)
         time.sleep(2)
@@ -58,6 +60,6 @@ while True:
             save.click()
             time.sleep(2)
 
-    driver.get("https://sis.rkcshz.cn/MissedRegisters.aspx")
+    driver.get(domain + "/MissedRegisters.aspx")
 
 driver.close()
