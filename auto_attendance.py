@@ -7,16 +7,50 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
 import datetime
+import PySimpleGUI as psg
+import yaml
+import os
 
-domain = "https://sis.rkcshz.cn"
+def ask_domain_config():
+    domain = None
+    domain = psg.popup_get_text("Enter the domain",default_text="https://")
+    return domain
+
+
+def ask_gecko_config():
+    gecko_driver = psg.popup_get_file("Enter the path to geckodriver.exe", default_path=r"C:\geckodriver.exe",
+                                      file_types=(("All files", "*.*"), ("Executables", "*.exe")))
+    print(gecko_driver)
+    return gecko_driver
+
+
+def get_config(settings):
+    config_file = "config.yaml"
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as cf:
+            ret = yaml.load(cf, Loader=yaml.FullLoader)
+    else:
+        ret = {}
+        for setting, missing_handler in settings:
+            ret[setting] = missing_handler()
+
+        with open(config_file, 'w') as cf:
+            yaml.dump(ret, cf)
+
+    return ret
+
+
+settings = get_config((("domain",ask_domain_config),("gecko",ask_gecko_config)))
+print(settings)
+
 
 now = datetime.datetime.now().date()
 days = (now - datetime.date(2019,9,1)).days
 
 
 #driver = webdriver.Firefox()
-driver = webdriver.Firefox(executable_path=r'C:\geckodriver.exe')
-driver.get(domain + "/MissedRegisters.aspx")
+driver = webdriver.Firefox(executable_path=settings["gecko"])
+driver.get(settings["domain"] + "/MissedRegisters.aspx")
 assert "Engage" in driver.title
 
 while True:
