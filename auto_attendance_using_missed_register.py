@@ -47,8 +47,6 @@ print(settings)
 now = datetime.datetime.now().date()
 days = (now - datetime.date(2019,9,1)).days
 
-
-#driver = webdriver.Firefox()
 driver = webdriver.Firefox(executable_path=settings["gecko"])
 driver.get(settings["domain"] + "/MissedRegisters.aspx")
 assert "Engage" in driver.title
@@ -60,6 +58,7 @@ while True:
 
     try:
         dr = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, "ctl00_PageContent_missedRegisterDetailsFilterBar_ctl00_btnFilter")))
+
     except TimeoutException:
         print("Loading text timeout!")
         exit()
@@ -82,11 +81,12 @@ while True:
         break
 
     for c in classes:
-        t = domain + c.attrs['data-href']
+        t = settings["domain"] + c.attrs['data-href']
         print(t)
         driver.get(t)
         time.sleep(2)
         links = driver.find_elements_by_link_text("Mark as Present")
+
         if len(links) > 0:
             for l in links:
                 l.click()
@@ -94,6 +94,6 @@ while True:
             save.click()
             time.sleep(2)
 
-    driver.get(domain + "/MissedRegisters.aspx")
+    driver.get(settings["domain"] + "/MissedRegisters.aspx")
 
 driver.close()
