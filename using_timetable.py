@@ -19,7 +19,7 @@ def ask_domain_config():
 
 def ask_gecko_config():
     gecko_driver = psg.popup_get_file("Enter the path to geckodriver.exe", default_path=r"C:\geckodriver.exe",
-                                      file_types=(("All files", "*.*"), ("Executables", "*.exe")))
+                                      file_types=(("Executables", "*.exe"),("All Files","*.*")))
     print(gecko_driver)
     return gecko_driver
 
@@ -87,8 +87,9 @@ while True:
         mark_link = driver.find_elements_by_link_text("Mark as Present")
         for l in mark_link:
             l.click()
-        #    save = driver.find_element_by_name("ctl00$PageContent$btnSaveGrid")
-        #    save.click()
+
+        save = driver.find_element_by_name("ctl00$PageContent$btnSaveGrid")
+        save.click()
         time.sleep(2)
 
     num_weeks += 1
