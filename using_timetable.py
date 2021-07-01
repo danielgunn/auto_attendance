@@ -1,3 +1,5 @@
+# NOTE : This version of the file is here for historical reasons and is no longer supported
+
 import time
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
