@@ -1,12 +1,9 @@
-import time
+from time import sleep
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.keys import Keys
-from bs4 import BeautifulSoup
-import datetime
 import PySimpleGUI as psg
 import yaml
 import os
@@ -43,66 +40,69 @@ def get_config(settings):
 settings = get_config((("domain",ask_domain_config),("gecko",ask_gecko_config)))
 print(settings)
 
-#driver = webdriver.Firefox()
 driver = webdriver.Firefox(executable_path=settings["gecko"])
 
 first_time = True
 
-while True:
-    driver.get(settings["domain"] + "/default.aspx")
-    assert "Engage" in driver.title
-    try:
+try:
+    while True:
+        driver.get(settings["domain"] + "/default.aspx")
+        assert "Engage" in driver.title
         dr = WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.ID, 'ctl00_PageContent_ctl07_pnlNotices')))
 
-    except TimeoutException:
-        print("Loading text timeout!")
-        exit()
+        # I am using delays to ensure the rest of the page loads in time.. yes its a bit ugly
+        # TODO: use a better system
+        sleep(3)
 
-    time.sleep(3) #TODO I need this delay, to ensure the rest of the page loads.. but its ugly
+        # We only delete previous notices after going through the loop once
+        if not first_time:
+            selectBox = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, 'ctl00_PageContent_ctl07_rptrNotices_ctl00_ctl03')))
+            print("selecting notice box")
+            selectBox.click()
+            sleep(1)
 
-    if not first_time:
-        # TODO: we need to delete the notice
-        selectBox = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, 'ctl00_PageContent_ctl07_rptrNotices_ctl00_ctl03')))
-        print("selecting notice box")
-        selectBox.click()
-        time.sleep(1)
+            deleteButt = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, 'ctl00_PageContent_ctl07_btnBatchDelete')))
+            print("deleting notice...")
+            deleteButt.click()
+            sleep(1)
 
-        deleteButt = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, 'ctl00_PageContent_ctl07_btnBatchDelete')))
-        print("deleting notice...")
-        deleteButt.click()
-        time.sleep(1)
+            print("confirming delete..")
+            driver.switch_to.alert.accept()
+            sleep(1)
 
-        print("confirming delete..")
-        driver.switch_to.alert.accept()
-        time.sleep(1)
-
-    print("trying notice 0")
-    try:
-        noticeButt = WebDriverWait(driver, 20).until(
+        # click notice 0 and open the corresponding link
+        noticeButt = WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.ID, 'ctl00_PageContent_ctl07_rptrNotices_ctl00_btnSubject')))
-    except TimeoutException:
-        print("notice 0 not found")
-        exit()
 
-    print("clicking notice")
-    noticeButt.click()
-    time.sleep(2)
+        print("clicking notice")
+        noticeButt.click()
+        sleep(2)
 
-    c = driver.find_elements_by_xpath('//a[contains(@href,"ClassAttendance.aspx?")]')
-    c_href = c[0].get_attribute('href')
-    print("found class link:",c_href)
+        view_reg_link = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#notice-content > a:nth-child(3)")))
+        c_href = view_reg_link.get_attribute('href')
+        print("found class link:",c_href)
 
-    driver.get(c_href)
-    dr = WebDriverWait(driver, 20).until(
-        EC.visibility_of_all_elements_located((By.CLASS_NAME, "pupilHoverImage")))
-    mark_link = driver.find_elements_by_link_text("Mark as Present")
-    for l in mark_link:
-        l.click()
+        # wait for students images to load and then mark all students present
+        driver.get(c_href)
+        sleep(1)
 
-    save = driver.find_element_by_name("ctl00$PageContent$btnSaveGrid")
-    save.click()
-    time.sleep(2)
+        print("Waiting for class page to load...")
+        dr = WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "pupilHoverImage")))
+        sleep(1)
 
-    first_time = False
+        print("Pressing Mark as Present...")
+        mark_link = WebDriverWait(driver,5).until(EC.element_to_be_clickable((By.LINK_TEXT,'Mark as Present')))
+        mark_link.click()
+        sleep(1)
 
-driver.close()
+        print("Pressing Save Button...")
+        save = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID,'ctl00_PageContent_btnSaveGrid')))
+        save.click()
+        sleep(1)
+
+        first_time = False
+#except TimeoutException as err:
+#    print("Timed out..:", err)
+finally:
+    driver.close()
