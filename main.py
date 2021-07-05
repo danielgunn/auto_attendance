@@ -68,7 +68,7 @@ try:
 
             print("confirming delete..")
             driver.switch_to.alert.accept()
-            sleep(1)
+            sleep(2)
 
         # click notice 0 and open the corresponding link
         noticeButt = WebDriverWait(driver, 5).until(
@@ -88,20 +88,31 @@ try:
         sleep(1)
 
         print("Waiting for class page to load...")
-        dr = WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "pupilHoverImage")))
+        class_selected = WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.ID,"ctl00_PageContent_selectClassBox")))
+        class_selected = class_selected.get_attribute("value")
         sleep(1)
 
-        print("Pressing Mark as Present...")
-        mark_link = WebDriverWait(driver,5).until(EC.element_to_be_clickable((By.LINK_TEXT,'Mark as Present')))
-        mark_link.click()
-        sleep(1)
+        if len(class_selected) > 1:
+            print("processing",class_selected)
+            print("Waiting for students to load...")
+            WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "pupilHoverImage")))
+            sleep(1)
 
-        print("Pressing Save Button...")
-        save = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID,'ctl00_PageContent_btnSaveGrid')))
-        save.click()
-        sleep(1)
+            print("Pressing Mark as Present...")
+            mark_link = WebDriverWait(driver,5).until(EC.element_to_be_clickable((By.LINK_TEXT,'Mark as Present')))
+            mark_link.click()
+            sleep(1)
 
-        first_time = False
+            print("Pressing Save Button...")
+            save = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID,'ctl00_PageContent_btnSaveGrid')))
+            save.click()
+            sleep(1)
+
+            first_time = False
+        else:
+            # the class has been deleted (server side)
+            print("class no longer exists... skipping")
+
 #except TimeoutException as err:
 #    print("Timed out..:", err)
 finally:
